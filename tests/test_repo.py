@@ -26,7 +26,9 @@ def frontmatter(path):
 
 def every_text_file():
     for base, dirs, files in os.walk(ROOT):
-        dirs[:] = [d for d in dirs if d not in (".git", "__pycache__")]
+        # Private local account data, reports, and backups are never part of
+        # the shipped skill pack or text-style audit.
+        dirs[:] = [d for d in dirs if d not in (".git", "__pycache__", "trader", "reports")]
         for f in files:
             if f.endswith((".md", ".py", ".json", ".csv", ".txt", ".xml")) or f == "LICENSE":
                 yield os.path.join(base, f)
@@ -39,8 +41,10 @@ class Repo(unittest.TestCase):
         self.assertEqual(found, sorted(SKILLS))
 
     def test_root_matches_the_reel(self):
-        root = sorted(d for d in os.listdir(ROOT) if not d.startswith(".git"))
-        self.assertEqual(root, sorted([".claude-plugin", "LICENSE", "README.md", "tests"] + SKILLS))
+        root = sorted(d for d in os.listdir(ROOT)
+                      if not d.startswith(".git") and d not in ("__pycache__", "trader", "reports"))
+        self.assertEqual(root, sorted([".claude-plugin", "LICENSE", "README.md", "tests",
+                                       "CLAUDE.md", "orchestrate.py"] + SKILLS))
 
     def test_frontmatter_name_and_description(self):
         for s in SKILLS:

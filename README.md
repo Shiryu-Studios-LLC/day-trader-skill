@@ -16,6 +16,61 @@ past day the same setup fired, and tells you the honest odds.
 And no trade goes through until you say yes. Nothing in this pack can place
 an order on its own. Paper trading is the default.
 
+## Local development workspace (CachyOS)
+
+For the installed paper-trading workspace, open Claude Code from this repo:
+
+```bash
+cd /mnt/Development/Tools/day-trader-skill
+~/.local/bin/claude
+```
+
+Claude Code automatically reads this repository's `CLAUDE.md`, which explains
+how to use the **official Alpaca MCP** order tool with all three approval gates.
+Do not execute an order using Python, curl, background jobs, or an approval
+from a previous session.
+
+The local files are consolidated here:
+
+| path | purpose |
+| --- | --- |
+| `orchestrate.py` | Scanner, sizing, risk checks and ticket **review**, never broker order submission |
+| `trader/` | Private live local state: config, portfolio, proposals, scan data, order audit |
+| `reports/` | Private session reports and rollback copies of the prior layout |
+| `trader-*/` | The original eleven skills and their Python tools |
+| `tests/` | Unit and safety regression tests |
+
+The old `~/trader`, `~/Documents/lets-trade`, and
+`/mnt/Development/Tools/trader` paths are compatibility symlinks to this
+workspace, not independent copies. `trader/` and `reports/` are excluded from
+Git, and API keys remain in Claude's existing private configuration.
+
+To check the actual paper account, reconcile strategy funds, or review a new
+proposal without making a broker order:
+
+```bash
+python3 -B orchestrate.py --broker-status
+python3 -B orchestrate.py --verify-mcp
+python3 -B orchestrate.py --sync-broker
+python3 -B orchestrate.py --scan
+# Have Claude select a fresh valid hit and generate trader/plan.json.
+python3 -B orchestrate.py --budget
+python3 -B orchestrate.py --risk
+python3 -B orchestrate.py --ticket
+```
+
+The strategy allocation is **$5,000** even when the Alpaca paper account has
+more simulated buying power. An existing `trader/state/broker.json` approval
+with no actual Alpaca broker ID does not establish that any order was placed.
+Only Claude Code's connected MCP can submit a freshly vetted order after the
+user explicitly approves it and accepts the **Allow once** permission card.
+
+To test the repo without placing orders:
+
+```bash
+python3 -B -m unittest discover -s tests -p 'test_*.py' -q
+```
+
 > **Looking for the original Trader skill?** Copy an investor's 13F, the
 > stock screener, tax lots and rebalancing live in
 > [github.com/Jakeschincariol/trader-skill](https://github.com/Jakeschincariol/trader-skill).
